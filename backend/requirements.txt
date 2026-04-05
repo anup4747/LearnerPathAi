@@ -1,0 +1,8 @@
+flask
+flask-cors
+flask-socketio
+google-genai
+python-dotenv
+pymongo
+flask-jwt-extended
+supabase

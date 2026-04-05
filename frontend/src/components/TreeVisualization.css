@@ -1,0 +1,33 @@
+.tree-visualization {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tree-visualization svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.link {
+  fill: none;
+  stroke: rgba(50, 50, 50, 0.7);
+  stroke-width: 1.5px;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  transition: all 0.3s ease;
+}
+
+.node:hover circle {
+  r: 20;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+}
