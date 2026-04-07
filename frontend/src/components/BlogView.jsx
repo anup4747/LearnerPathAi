@@ -19,9 +19,7 @@ export default function BlogView({
 }) {
   const num = chapter?.chapter_number;
   const meta =
-    (roadmapMeta || []).find(
-      (c) => (c.chapter_number ?? 0) === num,
-    ) || {};
+    (roadmapMeta || []).find((c) => (c.chapter_number ?? 0) === num) || {};
 
   return (
     <article className="max-w-4xl mx-auto px-6 py-8 bg-gray-900 min-h-screen">
