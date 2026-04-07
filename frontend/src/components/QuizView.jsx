@@ -7,7 +7,7 @@ export default function QuizView({
   onContinue,
   onRefresh,
 }) {
-  const questions = quiz?.questions || [];
+  const questions = Array.isArray(quiz?.questions) ? quiz.questions : [];
   const total = questions.length || 5;
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -17,9 +17,19 @@ export default function QuizView({
   const [error, setError] = useState("");
 
   const answeredCount = useMemo(
-    () => Object.keys(answers).filter((k) => answers[k]).length,
+    () => Object.values(answers).filter(Boolean).length,
     [answers],
   );
+
+  const isLastQuestion = current === total - 1;
+  const allAnswered = useMemo(
+    () =>
+      questions.length > 0 &&
+      questions.every((_, idx) => Boolean(answers[String(idx)])),
+    [questions, answers],
+  );
+
+  const canSubmit = !saving && isLastQuestion && Boolean(answers[String(current)]);
 
   function selectOption(letter) {
     if (submitted) return;
@@ -72,12 +82,21 @@ export default function QuizView({
 
       {!submitted ? (
         <>
-          <div className="mb-6 flex-1 rounded-lg border border-vscode-border bg-vscode-sidebar p-6">
-            <p className="mb-4 text-sm text-vscode-muted">
-              Question {current + 1} of {total}
-            </p>
-            <p className="mb-6 text-vscode-text">{q?.question}</p>
-            <div className="grid gap-2">
+          <div className="mb-6 flex-1 rounded-[1.75rem] bg-slate-950/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.35)]">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  Question {current + 1} of {total}
+                </p>
+                <h3 className="mt-3 text-xl font-semibold text-white">
+                  {q?.question}
+                </h3>
+              </div>
+              <span className="inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                {allAnswered ? "Complete" : `${answeredCount} answered`}
+              </span>
+            </div>
+            <div className="grid gap-3">
               {["A", "B", "C", "D"].map((L) => {
                 const text = q?.options?.[L] ?? "";
                 const selected = answers[String(current)] === L;
@@ -86,30 +105,30 @@ export default function QuizView({
                     key={L}
                     type="button"
                     onClick={() => selectOption(L)}
-                    className={`flex gap-3 rounded border px-4 py-3 text-left text-sm transition ${
+                    className={`flex gap-4 rounded-3xl px-4 py-4 text-left text-sm transition ${
                       selected
-                        ? "border-vscode-accent bg-vscode-accent/20"
-                        : "border-vscode-border bg-vscode-bg hover:border-vscode-accent/40"
+                        ? "bg-vscode-accent/15 text-white ring-1 ring-vscode-accent"
+                        : "bg-slate-900/90 text-slate-200 hover:bg-slate-900"
                     }`}
                   >
-                    <span className="font-mono font-bold text-vscode-accent">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-800 font-mono font-semibold text-slate-300">
                       {L}
                     </span>
-                    <span>{text}</span>
+                    <span className="max-w-[calc(100%-4rem)] truncate">{text}</span>
                   </button>
                 );
               })}
             </div>
           </div>
           {error ? (
-            <p className="mb-2 text-sm text-vscode-error">{error}</p>
+            <p className="mb-2 text-sm text-rose-400">{error}</p>
           ) : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={current === 0}
               onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-              className="rounded border border-vscode-border bg-vscode-panel px-4 py-2 text-sm disabled:opacity-30"
+              className="rounded-2xl bg-slate-900 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-40"
             >
               Previous
             </button>
@@ -117,19 +136,26 @@ export default function QuizView({
               type="button"
               disabled={current >= total - 1}
               onClick={() => setCurrent((c) => Math.min(total - 1, c + 1))}
-              className="rounded border border-vscode-border bg-vscode-panel px-4 py-2 text-sm disabled:opacity-30"
+              className="rounded-2xl bg-slate-900 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-40"
             >
               Next
             </button>
             <button
               type="button"
-              disabled={answeredCount < total || saving}
+              disabled={!canSubmit}
               onClick={handleSubmit}
-              className="ml-auto rounded bg-vscode-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+              className="ml-auto rounded-full bg-vscode-accent px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-vscode-accent/90 disabled:opacity-40"
             >
               {saving ? "Saving…" : "Submit Quiz"}
             </button>
           </div>
+          <p className="mt-3 text-sm text-slate-400">
+            {isLastQuestion
+              ? allAnswered
+                ? "Ready to submit your quiz."
+                : "Only the last question can submit the quiz. Unanswered questions will be counted as incorrect."
+              : "Only the final question will allow quiz submission."}
+          </p>
         </>
       ) : (
         <>
@@ -140,36 +166,57 @@ export default function QuizView({
               return (
                 <div
                   key={i}
-                  className={`rounded-lg border p-4 ${
+                  className={`rounded-[1.75rem] p-5 transition ${
                     ok
-                      ? "border-vscode-success/50 bg-vscode-success/5"
-                      : "border-vscode-error/50 bg-vscode-error/5"
+                      ? "bg-slate-950/95 ring-1 ring-emerald-500/10"
+                      : "bg-slate-950/90 ring-1 ring-rose-500/10"
                   }`}
                 >
-                  <p className="mb-2 font-medium">{qq.question}</p>
-                  <p className="text-sm text-vscode-muted">
-                    Your answer: <strong>{u || "—"}</strong> — Correct:{" "}
-                    <strong>{qq.correct_answer}</strong>
+                  <p className="mb-3 text-base font-semibold text-white">
+                    {qq.question}
                   </p>
-                  <p className="mt-2 text-sm text-vscode-muted">
+                  <p className="text-sm text-slate-400">
+                    Your answer: <strong className="text-white">{u || "—"}</strong> — Correct: <strong className="text-white">{qq.correct_answer}</strong>
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-slate-400">
                     {qq.explanation}
                   </p>
                 </div>
               );
             })}
           </div>
-          <p className="mb-2 text-lg font-semibold">
-            Score: {score}/{total}
-          </p>
-          {score < 3 ? (
-            <p className="mb-4 rounded border border-vscode-warning/40 bg-vscode-warning/10 px-3 py-2 text-sm text-vscode-warning">
-              We suggest re-reading the chapter before moving on.
+          <div className="mb-4 rounded-[1.75rem] bg-slate-950/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.35)]">
+            <p className="text-sm uppercase tracking-[0.24em] text-slate-500">
+              Final result
             </p>
-          ) : null}
+            <div className="mt-3 flex items-center gap-4">
+              <p className="text-3xl font-semibold text-white">
+                {score}/{total}
+              </p>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] ${
+                score / total >= 0.75
+                  ? "bg-emerald-500/10 text-emerald-300"
+                  : score / total >= 0.5
+                    ? "bg-amber-500/10 text-amber-300"
+                    : "bg-rose-500/10 text-rose-300"
+              }`}>
+                {Math.round((score / total) * 100)}%
+              </span>
+            </div>
+            {score < 3 ? (
+              <p className="mt-4 text-sm leading-6 text-slate-400">
+                We recommend revisiting the chapter content before continuing.
+              </p>
+            ) : (
+              <p className="mt-4 text-sm leading-6 text-slate-400">
+                Great work — you can move to the next chapter with confidence.
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={onContinue}
-            className="rounded bg-vscode-panel px-4 py-2 text-sm ring-1 ring-vscode-border hover:bg-vscode-border/30"
+            className="rounded-full bg-vscode-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-vscode-accent/90"
           >
             Continue
           </button>

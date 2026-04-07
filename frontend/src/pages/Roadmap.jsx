@@ -41,7 +41,8 @@ export default function Roadmap() {
             Personalized Roadmap
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-            A clean, structured preview of the chapter roadmap designed for guided learning and clarity.
+            A clean, structured preview of the chapter roadmap designed for
+            guided learning and clarity.
           </p>
         </div>
 

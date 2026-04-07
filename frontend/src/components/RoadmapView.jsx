@@ -57,7 +57,8 @@ export default function RoadmapView({ topic }) {
         </div>
         <p className="max-w-3xl text-sm leading-7 text-slate-400">
           A clean, structured learning path with one chapter expanded at a time.
-          Each section is built to guide you through foundations, core concepts, and advanced work.
+          Each section is built to guide you through foundations, core concepts,
+          and advanced work.
         </p>
       </div>
 
@@ -76,18 +77,29 @@ export default function RoadmapView({ topic }) {
               {section.items.map((ch, index) => {
                 const chapterNumber = ch.chapter_number ?? index + 1;
                 const isActive = openChapter === chapterNumber && !ch.locked;
-                const status = getStatus({ ...ch, chapter_number: chapterNumber });
+                const status = getStatus({
+                  ...ch,
+                  chapter_number: chapterNumber,
+                });
                 const rowClasses = [
                   "relative overflow-hidden rounded-[1.75rem] bg-slate-950/95 p-6 transition duration-200",
-                  ch.locked ? "cursor-not-allowed opacity-70" : "hover:bg-slate-900/95",
-                  isActive ? "ring-1 ring-slate-700 shadow-[0_20px_60px_rgba(15,23,42,0.45)]" : "",
-                ].filter(Boolean).join(" ");
+                  ch.locked
+                    ? "cursor-not-allowed opacity-70"
+                    : "hover:bg-slate-900/95",
+                  isActive
+                    ? "ring-1 ring-slate-700 shadow-[0_20px_60px_rgba(15,23,42,0.45)]"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
 
                 return (
                   <div key={`roadmap-${chapterNumber}`} className={rowClasses}>
                     <button
                       type="button"
-                      onClick={() => !ch.locked && setOpenChapter(chapterNumber)}
+                      onClick={() =>
+                        !ch.locked && setOpenChapter(chapterNumber)
+                      }
                       className="w-full text-left"
                       aria-expanded={isActive}
                     >
@@ -102,14 +114,17 @@ export default function RoadmapView({ topic }) {
                                 {ch.title || `Chapter ${chapterNumber}`}
                               </h3>
                               <p className="max-w-2xl text-sm leading-6 text-slate-400">
-                                {ch.description || "A concise chapter preview to guide your next step."}
+                                {ch.description ||
+                                  "A concise chapter preview to guide your next step."}
                               </p>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-                          <span className={`rounded-full px-3 py-1 ${badgeDifficulty(ch.difficulty || topic?.level)}`}>
+                          <span
+                            className={`rounded-full px-3 py-1 ${badgeDifficulty(ch.difficulty || topic?.level)}`}
+                          >
                             {ch.difficulty || topic?.level}
                           </span>
                           <span className="rounded-full bg-slate-900 px-3 py-1 text-slate-400">
@@ -120,8 +135,8 @@ export default function RoadmapView({ topic }) {
                               status === "Completed"
                                 ? "bg-emerald-500/10 text-emerald-300"
                                 : status === "Locked"
-                                ? "bg-slate-800 text-slate-500"
-                                : "bg-slate-900 text-slate-400"
+                                  ? "bg-slate-800 text-slate-500"
+                                  : "bg-slate-900 text-slate-400"
                             }`}
                           >
                             {status}
@@ -144,7 +159,9 @@ export default function RoadmapView({ topic }) {
                     {isActive && (
                       <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-900/95 p-5 text-sm leading-7 text-slate-300 transition-all duration-200">
                         <p className="mb-5">
-                          {ch.full_description || ch.description || "Open the chapter to explore the full learning goals and take the next step."}
+                          {ch.full_description ||
+                            ch.description ||
+                            "Open the chapter to explore the full learning goals and take the next step."}
                         </p>
                         <div className="flex flex-wrap gap-3">
                           <button className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15">

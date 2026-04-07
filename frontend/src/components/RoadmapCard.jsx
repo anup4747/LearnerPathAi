@@ -15,9 +15,7 @@ export default function RoadmapCard({
             {chapter}
           </p>
           <h3 className="mt-3 text-2xl font-semibold text-white">{title}</h3>
-          <p className="mt-3 text-sm leading-7 text-slate-400">
-            {description}
-          </p>
+          <p className="mt-3 text-sm leading-7 text-slate-400">{description}</p>
         </div>
         <div className="flex flex-col items-start gap-2 text-right sm:items-end">
           <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">

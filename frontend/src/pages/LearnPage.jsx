@@ -92,6 +92,11 @@ export default function LearnPage({ user }) {
     return quizzes.every((q) => q.completed);
   }, [quizzes]);
 
+  const completedQuizCount = useMemo(
+    () => quizzes.filter((q) => q.completed).length,
+    [quizzes],
+  );
+
   const totalScores = useMemo(() => {
     if (!resultsData) return { total: 0, max: 0, pct: 0 };
     return {
@@ -259,34 +264,58 @@ export default function LearnPage({ user }) {
             </ul>
           </div>
 
-          {allQuizzesDone ? (
-            <div className="shrink-0 border-t border-vscode-border p-2">
-              <p className="mb-2 text-[10px] font-semibold uppercase text-vscode-muted">
-                Results
-              </p>
-              <p className="mb-1 text-xs text-vscode-text">
-                {totalScores.total} / {totalScores.max}
-              </p>
-              <p
-                className={`mb-2 text-xs font-medium ${
-                  totalScores.pct > 70
-                    ? "text-vscode-success"
-                    : totalScores.pct >= 50
-                      ? "text-vscode-warning"
-                      : "text-vscode-error"
-                }`}
-              >
-                {totalScores.pct}%
-              </p>
-              <button
-                type="button"
-                onClick={showResults}
-                className="w-full rounded bg-vscode-accent py-1.5 text-xs font-medium text-white"
-              >
-                View Full Results
-              </button>
+          <div className="shrink-0 border-t border-vscode-border bg-vscode-sidebar/80 p-4">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-vscode-muted">
+              Quiz results
+            </p>
+            <div className="rounded-3xl bg-[#13161f] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    Final score
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {completedQuizCount}/{quizzes.length} quizzes completed
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
+                    totalScores.pct >= 75
+                      ? "bg-emerald-500/10 text-emerald-300"
+                      : totalScores.pct >= 50
+                        ? "bg-amber-500/10 text-amber-300"
+                        : "bg-rose-500/10 text-rose-300"
+                  }`}
+                >
+                  {totalScores.pct}%
+                </span>
+              </div>
+              {resultsData ? (
+                <>
+                  <div className="mb-4 rounded-2xl bg-[#0f1118] p-3 text-sm text-slate-300">
+                    <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Total score
+                    </p>
+                    <p className="font-semibold text-white">
+                      {totalScores.total} / {totalScores.max}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={showResults}
+                    className="w-full rounded-full bg-vscode-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-vscode-accent/90"
+                  >
+                    View full results
+                  </button>
+                </>
+              ) : (
+                <p className="text-sm leading-6 text-slate-400">
+                  Complete at least one quiz to see your final score and
+                  progress here.
+                </p>
+              )}
             </div>
-          ) : null}
+          </div>
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col bg-[#0f0f1a]">
@@ -307,7 +336,9 @@ export default function LearnPage({ user }) {
             ))}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto bg-vscode-bg">
-            {activeTab?.type === "roadmap" ? <RoadmapView topic={topic} /> : null}
+            {activeTab?.type === "roadmap" ? (
+              <RoadmapView topic={topic} />
+            ) : null}
             {activeTab?.type === "blog" && activeTab.chapter ? (
               <BlogView
                 chapter={activeTab.chapter}
