@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import { getProfile } from "./api/learnpath";
 import FeedbackForm from "./components/FeedbackForm";
 import Navbar from "./components/Navbar";
 import LoadingScreen from "./components/LoadingScreen";
 import Dashboard from "./pages/Dashboard";
+import Exam from "./pages/Exam";
 import Home from "./pages/Home";
 import LearnPage from "./pages/LearnPage";
 import Login from "./pages/Login";
@@ -194,6 +201,14 @@ export default function App() {
         element={
           <ProtectedRoute user={user} authLoading={authLoading}>
             <LearnPage user={user} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learn/:topic_id/exam/:exam_id"
+        element={
+          <ProtectedRoute user={user} authLoading={authLoading}>
+            <Exam />
           </ProtectedRoute>
         }
       />

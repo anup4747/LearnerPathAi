@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { getExams } from "../api/learnpath";
+import { generateExam, getExams } from "../api/learnpath";
 
-export default function PrepMode({ topicId, topicName, onStartExam }) {
+export default function PrepMode({ topicId, topicName, userId, onStartExam }) {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -19,6 +21,25 @@ export default function PrepMode({ topicId, topicName, onStartExam }) {
     fetchExams();
   }, [topicId]);
 
+  async function handleCreateExam() {
+    if (!userId) return;
+    setMessage("");
+    setGenerating(true);
+    try {
+      const generated = await generateExam(userId, topicId);
+      setExams((prev) => [generated, ...prev]);
+      setMessage("Exam generated successfully. Starting now...");
+      onStartExam(generated);
+    } catch (error) {
+      console.error("Failed to generate exam:", error);
+      setMessage(
+        error.response?.data?.error || error.message || "Failed to create exam",
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-vscode-bg p-6 shadow-lg">
@@ -28,6 +49,16 @@ export default function PrepMode({ topicId, topicName, onStartExam }) {
         <p className="mb-4 text-vscode-muted">
           Review key concepts and take practice exams for {topicName}.
         </p>
+        <button
+          onClick={handleCreateExam}
+          disabled={generating || loading || !userId}
+          className="mb-4 w-full rounded bg-vscode-success px-4 py-2 text-white hover:bg-vscode-success/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {generating ? "Generating exam…" : "Generate exam from quiz pain points"}
+        </button>
+        {message ? (
+          <p className="mb-4 text-sm text-vscode-muted">{message}</p>
+        ) : null}
         {loading ? (
           <p className="text-vscode-muted">Loading exams...</p>
         ) : exams.length > 0 ? (

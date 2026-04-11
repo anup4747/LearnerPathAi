@@ -174,6 +174,23 @@ def api_exams(topic_id):
     return jsonify(out), 200
 
 
+@app.route("/api/exam/<exam_id>", methods=["GET"])
+def api_exam_one(exam_id):
+    try:
+        row = db.get_exam(exam_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    if not row:
+        return jsonify({"error": "Exam not found"}), 404
+    exam = serialize_doc(row)
+    if exam.get("capstone") and isinstance(exam["capstone"], str):
+        try:
+            exam["capstone_parsed"] = json.loads(exam["capstone"])
+        except json.JSONDecodeError:
+            exam["capstone_parsed"] = exam["capstone"]
+    return jsonify(exam), 200
+
+
 @app.route("/api/quiz/submit", methods=["POST"])
 def api_quiz_submit():
     data = request.get_json() or {}
@@ -413,6 +430,87 @@ def api_analytics(user_id, topic_id):
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
     return jsonify(serialize_doc(payload)), 200
+
+
+@app.route("/api/analytics/user/<user_id>", methods=["GET"])
+def api_user_analytics(user_id):
+    try:
+        payload = db.get_user_analytics(user_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(serialize_doc(payload)), 200
+
+
+@app.route("/api/exams/generate", methods=["POST"])
+def api_generate_exam():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    topic_id = data.get("topic_id")
+    exam_type = data.get("exam_type", "midterm")
+
+    if not user_id or not topic_id:
+        return jsonify({"error": "user_id and topic_id are required"}), 400
+
+    try:
+        topic = db.get_topic_full(topic_id)
+        if not topic:
+            return jsonify({"error": "Topic not found"}), 404
+
+        quizzes = db.get_quizzes(topic_id)
+        chapters = db.get_chapters(topic_id)
+        pain_chapters = []
+        for quiz in quizzes:
+            qmax = len(quiz.get("questions") or []) or 5
+            score = int(quiz.get("score") or 0)
+            percentage = round((score / qmax) * 100, 1) if qmax else 0
+            if not quiz.get("completed") or percentage < 70:
+                chapter = next(
+                    (c for c in chapters if c.get("chapter_number") == quiz.get("chapter_number")),
+                    None,
+                )
+                if chapter:
+                    pain_chapters.append(
+                        {
+                            "chapter_number": quiz.get("chapter_number"),
+                            "title": chapter.get("title") or f"Chapter {quiz.get('chapter_number')}",
+                            "percentage": percentage,
+                        }
+                    )
+
+        if not pain_chapters:
+            pain_chapters = [
+                {
+                    "chapter_number": c.get("chapter_number"),
+                    "title": c.get("title") or f"Chapter {c.get('chapter_number')}",
+                }
+                for c in chapters
+            ]
+
+        level = topic.get("level") or "Intermediate"
+        if exam_type == "final":
+            exam_data = ai_engine.generate_final_exam(
+                topic.get("topic_name", "Course"),
+                level,
+                [c.get("title") for c in chapters],
+            )
+        else:
+            exam_data = ai_engine.generate_midterm_exam(
+                topic.get("topic_name", "Course"),
+                level,
+                [c.get("title") for c in pain_chapters],
+            )
+
+        exam_id = db.save_exam(topic_id, exam_type, exam_data)
+        exam = db.get_exam(exam_id)
+        exam = serialize_doc(exam)
+        if exam.get("capstone") and isinstance(exam["capstone"], str):
+            try:
+                exam["capstone_parsed"] = json.loads(exam["capstone"])
+            except json.JSONDecodeError:
+                exam["capstone_parsed"] = exam["capstone"]
+        return jsonify(exam), 201
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 @app.route("/api/flashcards/create", methods=["POST"])

@@ -1,30 +1,82 @@
-import ExamCard from "../components/ExamCard";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import ExamView from "../components/ExamView";
+import { getExam } from "../api/learnpath";
 
 export default function Exam() {
+  const { topic_id, exam_id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [exam, setExam] = useState(location.state?.exam ?? null);
+  const [topicName] = useState(location.state?.topicName ?? "");
+  const [loading, setLoading] = useState(!exam);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (exam || !exam_id) return;
+
+    const loadExam = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getExam(exam_id);
+        if (cancelled) return;
+        setExam(data);
+      } catch (e) {
+        if (!cancelled)
+          setError(
+            e.response?.data?.error || e.message || "Failed to load exam",
+          );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadExam();
+    return () => {
+      cancelled = true;
+    };
+  }, [exam, exam_id]);
+
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-12 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <div className="rounded-[2rem] border border-slate-800 bg-slate-900/95 p-8 shadow-soft">
-          <h1 className="text-4xl font-semibold text-white">Exam Experience</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-            Mid-course and final exams are generated in the same AI-driven flow
-            to help you measure progress and retention.
-          </p>
+    <div className="min-h-screen bg-vscode-bg text-vscode-text">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-vscode-muted">
+              Exam preparation for {topicName || "your course"}
+            </p>
+            <h1 className="text-3xl font-semibold text-white">Exam mode</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(`/learn/${topic_id}`)}
+            className="rounded-full border border-vscode-border bg-vscode-sidebar px-4 py-2 text-sm text-vscode-text transition hover:bg-vscode-panel"
+          >
+            Back to course
+          </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <ExamCard
-            title="Mid-course Exam"
-            description="Ten MCQs, short answers, and a small project task. Total 30 points."
-            points={30}
-          />
-          <ExamCard
-            title="Final Exam"
-            description="Fifteen MCQs, short answers, and a capstone challenge. Total 50 points."
-            points={50}
-          />
+        <div className="rounded-[2rem] border border-vscode-border bg-vscode-sidebar p-6 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
+          {loading ? (
+            <div className="p-6 text-vscode-muted">Loading exam…</div>
+          ) : error ? (
+            <div className="space-y-4 p-6">
+              <p className="text-vscode-error">{error}</p>
+              <button
+                type="button"
+                onClick={() => navigate(`/learn/${topic_id}`)}
+                className="rounded-full bg-vscode-accent px-4 py-2 text-white"
+              >
+                Return to course
+              </button>
+            </div>
+          ) : (
+            <ExamView exam={exam} topicName={topicName} />
+          )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -157,6 +157,13 @@ def get_exams(topic_id):
     return list(cur)
 
 
+def get_exam(exam_id):
+    oid = _oid(exam_id)
+    if not oid:
+        return None
+    return exams_col.find_one({"_id": oid})
+
+
 def update_topic_completion(topic_id, total_score, max_score):
     oid = _oid(topic_id)
     if not oid:
@@ -176,6 +183,7 @@ def update_topic_completion(topic_id, total_score, max_score):
 
 def get_results(topic_id):
     quizzes = list(quizzes_col.find({"topic_id": topic_id}).sort("chapter_number", 1))
+    exams = list(exams_col.find({"topic_id": topic_id}))
 
     assessments = []
     total_score = 0
@@ -216,8 +224,36 @@ def get_results(topic_id):
                 }
             )
 
+    for e in exams:
+        exam_score = int(e.get("score") or 0) if e.get("completed") else None
+        exam_max = int(e.get("total_marks") or 0)
+        assessments.append(
+            {
+                "id": str(e["_id"]),
+                "name": e.get("title") or f"Exam {e.get('exam_number', '?')}",
+                "type": "exam",
+                "exam_type": e.get("exam_type"),
+                "score": exam_score,
+                "max_score": exam_max,
+                "percentage": (
+                    round((exam_score / exam_max) * 100, 1)
+                    if exam_score is not None and exam_max
+                    else None
+                ),
+                "passed": (
+                    exam_score is not None
+                    and exam_score >= int(e.get("pass_marks") or 0)
+                ),
+            }
+        )
+        if exam_score is not None:
+            total_score += exam_score
+            max_score += exam_max
+
     percentage = round((total_score / max_score) * 100, 1) if max_score else 0.0
-    all_done = len(quizzes) > 0 and all(q.get("completed") for q in quizzes)
+    all_done = (len(quizzes) + len(exams) > 0) and all(
+        item.get("completed") for item in quizzes + exams
+    )
 
     return {
         "assessments": assessments,
@@ -475,6 +511,17 @@ def get_topic_analytics(user_id, topic_id):
         "strongest_chapter": strongest,
         "weakest_chapter": weakest,
         "total_chapters": total_chapters,
+    }
+
+
+def get_user_analytics(user_id):
+    docs = list(analytics_col.find({"user_id": user_id}))
+    total_time = sum(int(doc.get("total_time", 0) or 0) for doc in docs)
+    max_streak = max((int(doc.get("streak", 0) or 0) for doc in docs), default=0)
+    return {
+        "total_time": total_time,
+        "best_streak": max_streak,
+        "topics_studied": len(docs),
     }
 
 

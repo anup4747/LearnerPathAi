@@ -44,6 +44,11 @@ export async function getExams(topic_id) {
   return data;
 }
 
+export async function getExam(exam_id) {
+  const { data } = await api.get(`/exam/${exam_id}`);
+  return data;
+}
+
 export async function submitQuiz(quiz_id, user_answers, score) {
   const { data } = await api.post("/quiz/submit", {
     quiz_id,
@@ -100,6 +105,20 @@ export async function deleteTopic(topic_id, user_id) {
 
 export async function getAnalytics(user_id, topic_id) {
   const { data } = await api.get(`/analytics/${user_id}/${topic_id}`);
+  return data;
+}
+
+export async function getUserAnalytics(user_id) {
+  const { data } = await api.get(`/analytics/user/${user_id}`);
+  return data;
+}
+
+export async function generateExam(user_id, topic_id, exam_type = "midterm") {
+  const { data } = await api.post("/exams/generate", {
+    user_id,
+    topic_id,
+    exam_type,
+  });
   return data;
 }
 

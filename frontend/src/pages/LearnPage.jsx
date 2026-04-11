@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
   getChapters,
+  getExams,
   getQuizzes,
-  getResults,
   getTopic,
   saveStudySession,
 } from "../api/learnpath";
@@ -28,7 +28,7 @@ export default function LearnPage({ user }) {
   const [topic, setTopic] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
-  const [resultsData, setResultsData] = useState(null);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tabs, setTabs] = useState([]);
@@ -40,16 +40,16 @@ export default function LearnPage({ user }) {
   const studySecondsRef = useRef(0);
 
   const refresh = useCallback(async () => {
-    if (!topic_id) return;
-    const [ch, qz, res] = await Promise.all([
+    if (!topic_id || !user?.id) return;
+    const [ch, qz, examList] = await Promise.all([
       getChapters(topic_id),
       getQuizzes(topic_id),
-      getResults(topic_id).catch(() => null),
+      getExams(topic_id).catch(() => []),
     ]);
     setChapters(Array.isArray(ch) ? ch : []);
     setQuizzes(Array.isArray(qz) ? qz : []);
-    setResultsData(res);
-  }, [topic_id]);
+    setExams(Array.isArray(examList) ? examList : []);
+  }, [topic_id, user?.id]);
 
   const sendStudyTime = useCallback(
     async (seconds) => {
@@ -126,24 +126,33 @@ export default function LearnPage({ user }) {
     return m;
   }, [quizzes]);
 
-  const allQuizzesDone = useMemo(() => {
-    if (!quizzes.length) return false;
-    return quizzes.every((q) => q.completed);
-  }, [quizzes]);
+  const resultItems = useMemo(() => {
+    const quizResults = quizzes.map((q) => ({
+      id: q._id,
+      title: `Quiz ${q.chapter_number}`,
+      detail: q.completed
+        ? `${q.score}/${q.questions?.length || 5}`
+        : "Pending",
+      status: q.completed ? "Completed" : "Open",
+      icon: "📝",
+      type: "quiz",
+      completed: q.completed,
+    }));
 
-  const completedQuizCount = useMemo(
-    () => quizzes.filter((q) => q.completed).length,
-    [quizzes],
-  );
+    const examResults = exams.map((exam) => ({
+      id: exam._id,
+      title: exam.title || `Exam ${exam.exam_number || ""}`,
+      detail: exam.completed
+        ? `${exam.score}/${exam.total_marks || 0}`
+        : "Ready",
+      status: exam.completed ? "Completed" : "Ready",
+      icon: "🎯",
+      type: "exam",
+      completed: exam.completed,
+    }));
 
-  const totalScores = useMemo(() => {
-    if (!resultsData) return { total: 0, max: 0, pct: 0 };
-    return {
-      total: resultsData.total_score ?? 0,
-      max: resultsData.max_score ?? 0,
-      pct: resultsData.percentage ?? 0,
-    };
-  }, [resultsData]);
+    return [...quizResults, ...examResults];
+  }, [quizzes, exams]);
 
   function openTab(tab) {
     setTabs((prev) => {
@@ -215,28 +224,6 @@ export default function LearnPage({ user }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-vscode-bg text-vscode-text">
-      <header className="flex h-10 shrink-0 items-center justify-between border-b border-vscode-border bg-vscode-sidebar px-3">
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard")}
-          className="text-sm font-medium text-vscode-accent hover:underline"
-        >
-          ← EduGen AI
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="max-w-[160px] truncate text-xs text-vscode-muted">
-            {user?.email}
-          </span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded border border-vscode-border px-2 py-1 text-xs text-vscode-muted hover:bg-vscode-panel"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
       <div className="flex min-h-0 flex-1">
         <aside className="flex w-[260px] shrink-0 flex-col border-r border-vscode-border bg-vscode-sidebar">
           <div className="shrink-0 p-2">
@@ -261,6 +248,23 @@ export default function LearnPage({ user }) {
             >
               <span aria-hidden>🎯</span> PREP MODE
             </button>
+            {exams.length > 0 ? (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(`/learn/${topic_id}/exam/${exams[0]._id}`, {
+                    state: { exam: exams[0], topicName: topic?.topic_name },
+                  })
+                }
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded border border-vscode-border bg-vscode-accent px-2 py-2 text-sm font-semibold text-white hover:bg-vscode-accent/90"
+              >
+                Start exam: {exams[0].title || `Exam ${exams[0].exam_number}`}
+              </button>
+            ) : (
+              <p className="mt-2 px-2 text-xs text-vscode-muted">
+                No prep exams are ready yet.
+              </p>
+            )}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
             <p className="px-1 py-2 text-[10px] font-semibold uppercase tracking-wider text-vscode-muted">
@@ -315,58 +319,61 @@ export default function LearnPage({ user }) {
                 </li>
               ))}
             </ul>
-          </div>
 
-          <div className="shrink-0 border-t border-vscode-border bg-vscode-sidebar/80 p-4">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-vscode-muted">
-              Quiz results
-            </p>
-            <div className="rounded-3xl bg-[#13161f] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mt-4 rounded-3xl bg-[#13161f] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+              <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-white">
-                    Final score
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-vscode-muted">
+                    Results
                   </p>
                   <p className="text-xs text-slate-400">
-                    {completedQuizCount}/{quizzes.length} quizzes completed
+                    Quiz + exam progress in one place
                   </p>
                 </div>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
-                    totalScores.pct >= 75
-                      ? "bg-emerald-500/10 text-emerald-300"
-                      : totalScores.pct >= 50
-                        ? "bg-amber-500/10 text-amber-300"
-                        : "bg-rose-500/10 text-rose-300"
-                  }`}
+                <button
+                  type="button"
+                  onClick={showResults}
+                  className="rounded-full border border-vscode-border bg-vscode-panel px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-vscode-text hover:bg-vscode-border/30"
                 >
-                  {totalScores.pct}%
-                </span>
+                  Full view
+                </button>
               </div>
-              {resultsData ? (
-                <>
-                  <div className="mb-4 rounded-2xl bg-[#0f1118] p-3 text-sm text-slate-300">
-                    <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Total score
+              <ul className="space-y-2">
+                {resultItems.length > 0 ? (
+                  resultItems.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={showResults}
+                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-vscode-border bg-vscode-border/20 px-3 py-2 text-left text-sm hover:bg-vscode-panel/80"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>{item.icon}</span>
+                          <span className="truncate">{item.title}</span>
+                        </span>
+                        <span className="flex items-center gap-2 text-[11px] text-slate-400">
+                          <span>{item.detail}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 ${
+                              item.completed
+                                ? "bg-vscode-success/10 text-vscode-success"
+                                : "bg-vscode-muted/10 text-vscode-muted"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <p className="text-sm text-slate-400">
+                      No quiz or exam items are available yet.
                     </p>
-                    <p className="font-semibold text-white">
-                      {totalScores.total} / {totalScores.max}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={showResults}
-                    className="w-full rounded-full bg-vscode-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-vscode-accent/90"
-                  >
-                    View full results
-                  </button>
-                </>
-              ) : (
-                <p className="text-sm leading-6 text-slate-400">
-                  Complete at least one quiz to see your final score and
-                  progress here.
-                </p>
-              )}
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
         </aside>
@@ -466,10 +473,13 @@ export default function LearnPage({ user }) {
         <PrepMode
           topicId={topic_id}
           topicName={topic.topic_name}
+          userId={user?.id}
           onStartExam={(exam) => {
             setShowPrepMode(false);
             if (exam) {
-              // TODO: Navigate to exam
+              navigate(`/learn/${topic_id}/exam/${exam._id}`, {
+                state: { exam, topicName: topic.topic_name },
+              });
             }
           }}
         />
