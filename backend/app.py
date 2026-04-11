@@ -337,6 +337,84 @@ def api_delete_note(note_id):
     return jsonify({"success": True}), 200
 
 
+@app.route("/api/profile/<user_id>", methods=["GET"])
+def api_get_profile(user_id):
+    try:
+        profile = db.get_user_profile(user_id) or {}
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(serialize_doc(profile)), 200
+
+
+@app.route("/api/profile/update", methods=["POST"])
+def api_update_profile():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    full_name = data.get("full_name")
+    username = data.get("username")
+    bio = data.get("bio", "")
+    avatar_data = data.get("avatar_data")
+    avatar_url = data.get("avatar_url")
+
+    if not all([user_id, full_name, username]):
+        return jsonify({"error": "user_id, full_name, and username are required"}), 400
+
+    try:
+        profile = db.save_user_profile(
+            user_id,
+            full_name,
+            username,
+            bio,
+            avatar_data=avatar_data,
+            avatar_url=avatar_url,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify({"success": True, "profile": serialize_doc(profile)}), 200
+
+
+@app.route("/api/topics/delete/<topic_id>", methods=["DELETE"])
+def api_delete_topic(topic_id):
+    user_id = request.args.get("user_id")
+    try:
+        deleted = db.delete_topic(topic_id, user_id=user_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    if not deleted:
+        return jsonify({"error": "Topic not found or not authorized"}), 404
+    return jsonify({"success": True}), 200
+
+
+@app.route("/api/analytics/study", methods=["POST"])
+def api_analytics_study():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    topic_id = data.get("topic_id")
+    seconds = data.get("seconds")
+
+    if not all([user_id, topic_id]) or seconds is None:
+        return jsonify({"error": "user_id, topic_id, and seconds are required"}), 400
+
+    try:
+        db.update_study_time(user_id, topic_id, int(seconds))
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify({"success": True}), 200
+
+
+@app.route("/api/analytics/<user_id>/<topic_id>", methods=["GET"])
+def api_analytics(user_id, topic_id):
+    try:
+        payload = db.get_topic_analytics(user_id, topic_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(serialize_doc(payload)), 200
+
+
 @app.route("/api/flashcards/create", methods=["POST"])
 def api_create_flashcards():
     data = request.get_json() or {}

@@ -67,6 +67,51 @@ export async function getResults(topic_id) {
   return data;
 }
 
+export async function getProfile(user_id) {
+  const { data } = await api.get(`/profile/${user_id}`);
+  return data;
+}
+
+export async function updateProfile(
+  user_id,
+  full_name,
+  username,
+  bio,
+  avatar_data,
+  avatar_url,
+) {
+  const { data } = await api.post(`/profile/update`, {
+    user_id,
+    full_name,
+    username,
+    bio,
+    avatar_data,
+    avatar_url,
+  });
+  return data;
+}
+
+export async function deleteTopic(topic_id, user_id) {
+  const { data } = await api.delete(`/topics/delete/${topic_id}`, {
+    params: { user_id },
+  });
+  return data;
+}
+
+export async function getAnalytics(user_id, topic_id) {
+  const { data } = await api.get(`/analytics/${user_id}/${topic_id}`);
+  return data;
+}
+
+export async function saveStudySession(user_id, topic_id, seconds) {
+  const { data } = await api.post("/analytics/study", {
+    user_id,
+    topic_id,
+    seconds,
+  });
+  return data;
+}
+
 export async function sendChat(topic, context, conversation_history, message) {
   const { data } = await api.post("/chat", {
     topic,

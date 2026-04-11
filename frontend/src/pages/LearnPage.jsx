@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
@@ -6,6 +6,7 @@ import {
   getQuizzes,
   getResults,
   getTopic,
+  saveStudySession,
 } from "../api/learnpath";
 import BlogView from "../components/BlogView";
 import ChatBot from "../components/ChatBot";
@@ -36,6 +37,7 @@ export default function LearnPage({ user }) {
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   const [showPrepMode, setShowPrepMode] = useState(false);
   const [notesVersion, setNotesVersion] = useState(0);
+  const studySecondsRef = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!topic_id) return;
@@ -48,6 +50,38 @@ export default function LearnPage({ user }) {
     setQuizzes(Array.isArray(qz) ? qz : []);
     setResultsData(res);
   }, [topic_id]);
+
+  const sendStudyTime = useCallback(
+    async (seconds) => {
+      if (!topic_id || !user?.id || seconds <= 0) return;
+      try {
+        await saveStudySession(user.id, topic_id, seconds);
+      } catch (e) {
+        console.error("Error saving study session:", e);
+      }
+    },
+    [topic_id, user?.id],
+  );
+
+  useEffect(() => {
+    if (!topic_id || !user?.id) return;
+    const interval = setInterval(() => {
+      studySecondsRef.current += 15;
+      if (studySecondsRef.current >= 60) {
+        const seconds = studySecondsRef.current;
+        studySecondsRef.current = 0;
+        sendStudyTime(seconds);
+      }
+    }, 15000);
+
+    return () => {
+      if (studySecondsRef.current > 0) {
+        sendStudyTime(studySecondsRef.current);
+        studySecondsRef.current = 0;
+      }
+      clearInterval(interval);
+    };
+  }, [topic_id, user?.id, sendStudyTime]);
 
   useEffect(() => {
     let cancelled = false;

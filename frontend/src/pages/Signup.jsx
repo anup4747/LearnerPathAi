@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 
 export default function Signup() {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +20,12 @@ export default function Signup() {
       const { error: signErr } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: {
+            full_name: name,
+            username: username,
+          },
+        },
       });
       if (signErr) throw signErr;
       setSuccessMsg("Check your email to confirm your account.");
@@ -54,6 +60,19 @@ export default function Signup() {
               required
               className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
               autoComplete="name"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
+              autoComplete="username"
             />
           </div>
           <div className="space-y-2">

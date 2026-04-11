@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import { getUserTopics } from "../api/learnpath";
-import Navbar from "../components/Navbar";
-import FeedbackForm from "../components/FeedbackForm";
+import { getUserTopics, deleteTopic } from "../api/learnpath";
 
 function levelBadgeClass(level) {
   if (level === "Beginner") return "bg-emerald-500/10 text-emerald-300";
@@ -16,7 +13,8 @@ export default function Dashboard({ user }) {
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [deletingTopicId, setDeletingTopicId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,9 +39,22 @@ export default function Dashboard({ user }) {
     };
   }, [user?.id]);
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    navigate("/");
+  async function handleDeleteTopic(topic_id) {
+    if (!window.confirm("Delete this topic? This cannot be undone.")) {
+      return;
+    }
+    setDeletingTopicId(topic_id);
+    try {
+      await deleteTopic(topic_id, user.id);
+      setTopics((prev) => prev.filter((topic) => topic._id !== topic_id));
+      setActiveMenuId(null);
+    } catch (err) {
+      setError(
+        err.response?.data?.error || err.message || "Failed to delete topic",
+      );
+    } finally {
+      setDeletingTopicId(null);
+    }
   }
 
   function handleFeedback() {
@@ -52,8 +63,7 @@ export default function Dashboard({ user }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-vscode-bg text-vscode-text">
-      <Navbar userEmail={user?.email} onLogout={handleLogout} onFeedback={handleFeedback} />
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-4">
         <aside className="w-[300px] shrink-0 border-r border-slate-800 bg-slate-950/95 px-6 py-6 max-h-screen overflow-y-auto">
           <div className="mb-8 rounded-[2rem] bg-slate-900/90 p-5 ring-1 ring-slate-800">
             <p className="text-xs uppercase tracking-[0.28em] text-vscode-muted">
@@ -82,21 +92,52 @@ export default function Dashboard({ user }) {
             ) : (
               <div className="space-y-3">
                 {topics.map((t) => (
-                  <button
+                  <div
                     key={t._id}
-                    type="button"
-                    onClick={() => navigate(`/learn/${t._id}`)}
-                    className="w-full rounded-[1.75rem] bg-slate-900 px-4 py-4 text-left text-sm text-slate-100 transition hover:bg-slate-800"
+                    className="relative rounded-[1.75rem] bg-slate-900 px-4 py-4 text-left text-sm text-slate-100 transition hover:bg-slate-800"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-medium truncate">
-                        {t.topic_name}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-1 text-[10px] font-semibold ${levelBadgeClass(t.level)}`}
+                    <div className="flex items-start justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/learn/${t._id}`)}
+                        className="flex-1 text-left"
                       >
-                        {t.level}
-                      </span>
+                        <span className="font-medium truncate">
+                          {t.topic_name}
+                        </span>
+                      </button>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setActiveMenuId((current) =>
+                              current === t._id ? null : t._id,
+                            );
+                          }}
+                          className="rounded-full p-2 text-slate-300 hover:bg-slate-800"
+                          aria-label="Topic actions"
+                        >
+                          •••
+                        </button>
+                        {activeMenuId === t._id && (
+                          <div className="absolute right-0 top-full z-10 mt-2 w-40 rounded-3xl border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteTopic(t._id);
+                              }}
+                              disabled={deletingTopicId === t._id}
+                              className="w-full rounded-3xl px-3 py-2 text-left text-sm font-semibold text-rose-300 transition hover:bg-slate-900 disabled:opacity-50"
+                            >
+                              {deletingTopicId === t._id
+                                ? "Deleting…"
+                                : "Delete topic"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
                       <span>{t.completed ? "Completed" : "In progress"}</span>
@@ -106,7 +147,7 @@ export default function Dashboard({ user }) {
                           : ""}
                       </span>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -151,28 +192,59 @@ export default function Dashboard({ user }) {
               </section>
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {topics.slice(0, 6).map((t) => (
-                  <button
+                  <div
                     key={t._id}
-                    type="button"
-                    onClick={() => navigate(`/learn/${t._id}`)}
-                    className="rounded-[2rem] bg-slate-950/95 p-6 text-left ring-1 ring-slate-800 shadow-[0_18px_50px_rgba(0,0,0,0.3)] transition hover:shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+                    className="relative rounded-[2rem] bg-slate-950/95 p-6 text-left ring-1 ring-slate-800 shadow-[0_18px_50px_rgba(0,0,0,0.3)] transition hover:shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
                   >
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <p className="text-base font-semibold text-white truncate">
-                        {t.topic_name}
-                      </p>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${levelBadgeClass(t.level)}`}
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/learn/${t._id}`)}
+                        className="flex-1 text-left"
                       >
-                        {t.level}
-                      </span>
+                        <p className="text-base font-semibold text-white truncate">
+                          {t.topic_name}
+                        </p>
+                      </button>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setActiveMenuId((current) =>
+                              current === t._id ? null : t._id,
+                            );
+                          }}
+                          className="rounded-full p-2 text-slate-300 hover:bg-slate-900"
+                          aria-label="Topic actions"
+                        >
+                          •••
+                        </button>
+                        {activeMenuId === t._id && (
+                          <div className="absolute right-0 top-full z-10 mt-2 w-40 rounded-3xl border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteTopic(t._id);
+                              }}
+                              disabled={deletingTopicId === t._id}
+                              className="w-full rounded-3xl px-3 py-2 text-left text-sm font-semibold text-rose-300 transition hover:bg-slate-900 disabled:opacity-50"
+                            >
+                              {deletingTopicId === t._id
+                                ? "Deleting…"
+                                : "Delete topic"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm leading-6 text-slate-400">
                       {t.completed
                         ? `Score: ${t.total_score ?? 0} / ${t.max_score ?? 0}`
                         : "Continue this topic"}
                     </p>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -181,22 +253,6 @@ export default function Dashboard({ user }) {
       </div>
 
       {/* Feedback Modal */}
-      {showFeedback && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 rounded-[2rem] p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto ring-1 ring-slate-800">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-white">Feedback</h2>
-              <button
-                onClick={() => setShowFeedback(false)}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <FeedbackForm user={user} onClose={() => setShowFeedback(false)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,10 +1,13 @@
+import base64
 import json
 import os
 from datetime import datetime
 
 from bson import ObjectId
+from bson.raw_bson import RawBSONDocument
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from pymongo.collection import ReturnDocument
 
 load_dotenv()
 
@@ -21,6 +24,7 @@ feedback_col = _db["feedback"]
 notes_col = _db["notes"]
 flashcards_col = _db["flashcards"]
 analytics_col = _db["analytics"]
+profiles_col = _db["profiles"]
 achievements_col = _db["achievements"]
 
 
@@ -267,6 +271,74 @@ def get_user_notes(user_id, topic_id):
     return notes
 
 
+def _decode_avatar_data(avatar_data):
+    if not isinstance(avatar_data, str) or "," not in avatar_data:
+        return None
+    try:
+        _, encoded = avatar_data.split(",", 1)
+        return base64.b64decode(encoded, validate=True)
+    except Exception:
+        return None
+
+
+def get_user_profile(user_id):
+    profile = profiles_col.find_one({"user_id": user_id}) or {}
+    if profile.get("_id"):
+        profile["_id"] = str(profile["_id"])
+    return profile
+
+
+def save_user_profile(user_id, full_name, username, bio, avatar_data=None, avatar_url=None):
+    if avatar_data:
+        decoded = _decode_avatar_data(avatar_data)
+        if decoded is None:
+            raise ValueError("Invalid avatar image data")
+        if len(decoded) > 1024 * 1024:
+            raise ValueError("Avatar image exceeds maximum size of 1MB")
+    now = datetime.utcnow()
+    update_payload = {
+        "full_name": full_name,
+        "username": username,
+        "bio": bio,
+        "avatar_data": avatar_data if avatar_data else None,
+        "avatar_url": avatar_url if avatar_url else None,
+        "updated_at": now,
+    }
+    profile = profiles_col.find_one_and_update(
+        {"user_id": user_id},
+        {
+            "$set": update_payload,
+            "$setOnInsert": {"created_at": now},
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    if profile.get("_id"):
+        profile["_id"] = str(profile["_id"])
+    return profile
+
+
+def delete_topic(topic_id, user_id=None):
+    oid = _oid(topic_id)
+    if not oid:
+        return False
+    query = {"_id": oid}
+    if user_id:
+        query["user_id"] = user_id
+
+    result = topics_col.delete_one(query)
+    if result.deleted_count == 0:
+        return False
+
+    chapters_col.delete_many({"topic_id": topic_id})
+    quizzes_col.delete_many({"topic_id": topic_id})
+    exams_col.delete_many({"topic_id": topic_id})
+    results_col.delete_many({"topic_id": topic_id})
+    notes_col.delete_many({"topic_id": topic_id})
+    flashcards_col.delete_many({"topic_id": topic_id})
+    return True
+
+
 def update_note(note_id, note_text):
     oid = _oid(note_id)
     if not oid:
@@ -307,11 +379,103 @@ def get_flashcards(user_id, topic_id):
 
 
 def update_study_time(user_id, topic_id, time_spent):
-    analytics_col.update_one(
-        {"user_id": user_id, "topic_id": topic_id},
-        {"$inc": {"total_time": time_spent}, "$set": {"last_updated": datetime.utcnow()}},
-        upsert=True
-    )
+    now = datetime.utcnow()
+    analytics = analytics_col.find_one({"user_id": user_id, "topic_id": topic_id})
+    streak = 1
+    if analytics:
+        last_studied_at = analytics.get("last_studied_at")
+        if isinstance(last_studied_at, datetime):
+            delta_days = (now.date() - last_studied_at.date()).days
+            if delta_days == 1:
+                streak = (analytics.get("streak", 0) or 0) + 1
+            elif delta_days == 0:
+                streak = analytics.get("streak", 1) or 1
+            else:
+                streak = 1
+        else:
+            streak = (analytics.get("streak", 0) or 0) + 1
+
+        analytics_col.update_one(
+            {"user_id": user_id, "topic_id": topic_id},
+            {
+                "$inc": {"total_time": time_spent},
+                "$set": {
+                    "last_studied_at": now,
+                    "last_updated": now,
+                    "streak": streak,
+                },
+            },
+            upsert=True,
+        )
+    else:
+        analytics_col.insert_one(
+            {
+                "user_id": user_id,
+                "topic_id": topic_id,
+                "total_time": time_spent,
+                "streak": 1,
+                "created_at": now,
+                "last_studied_at": now,
+                "last_updated": now,
+            }
+        )
+
+
+def get_topic_analytics(user_id, topic_id):
+    analytics = analytics_col.find_one({"user_id": user_id, "topic_id": topic_id}) or {}
+    total_time = analytics.get("total_time", 0)
+    streak = analytics.get("streak", 0)
+    last_studied_at = analytics.get("last_studied_at")
+    last_studied_at = last_studied_at.isoformat() if isinstance(last_studied_at, datetime) else last_studied_at
+
+    chapters = list(chapters_col.find({"topic_id": topic_id}).sort("chapter_number", 1))
+    quizzes = list(quizzes_col.find({"topic_id": topic_id}).sort("chapter_number", 1))
+
+    total_chapters = len(chapters)
+    completed_chapters = sum(1 for q in quizzes if q.get("completed"))
+    remaining_chapters = max(total_chapters - completed_chapters, 0)
+
+    total_score = 0
+    total_max = 0
+    scores = []
+    for q in quizzes:
+        qmax = len(q.get("questions") or [])
+        if qmax == 0:
+            qmax = 5
+        score = int(q.get("score") or 0)
+        if q.get("completed"):
+            total_score += score
+            total_max += qmax
+        scores.append(
+            {
+                "chapter_number": q.get("chapter_number"),
+                "score": score,
+                "max": qmax,
+                "percentage": round((score / qmax) * 100, 1) if qmax else 0,
+                "title": next((c.get("title") for c in chapters if c.get("chapter_number") == q.get("chapter_number")), f"Chapter {q.get('chapter_number')}")
+            }
+        )
+
+    average_quiz_score = round((total_score / total_max) * 100, 1) if total_max else 0
+
+    strongest = None
+    weakest = None
+    scored = [s for s in scores if s.get("max") > 0]
+    if scored:
+        strongest = max(scored, key=lambda item: item["percentage"])
+        weakest = min(scored, key=lambda item: item["percentage"])
+
+    return {
+        "total_time": total_time,
+        "study_streak": streak,
+        "last_studied_at": last_studied_at,
+        "chapters_completed": completed_chapters,
+        "chapters_remaining": remaining_chapters,
+        "average_quiz_score": average_quiz_score,
+        "strongest_chapter": strongest,
+        "weakest_chapter": weakest,
+        "total_chapters": total_chapters,
+    }
 
 
 def unlock_achievement(user_id, achievement_type):
