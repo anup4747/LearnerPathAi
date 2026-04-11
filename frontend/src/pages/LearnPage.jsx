@@ -12,6 +12,8 @@ import ChatBot from "../components/ChatBot";
 import QuizView from "../components/QuizView";
 import ResultView from "../components/ResultView";
 import RoadmapView from "../components/RoadmapView";
+import NotesPanel from "../components/NotesPanel";
+import PrepMode from "../components/PrepMode";
 
 function sortChapters(ch) {
   return [...ch].sort(
@@ -31,6 +33,9 @@ export default function LearnPage({ user }) {
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
   const [chatContext, setChatContext] = useState("");
+  const [showNotesPanel, setShowNotesPanel] = useState(false);
+  const [showPrepMode, setShowPrepMode] = useState(false);
+  const [notesVersion, setNotesVersion] = useState(0);
 
   const refresh = useCallback(async () => {
     if (!topic_id) return;
@@ -208,6 +213,20 @@ export default function LearnPage({ user }) {
             >
               <span aria-hidden>🗺</span> ROADMAP
             </button>
+            <button
+              type="button"
+              onClick={() => setShowNotesPanel(true)}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded border border-vscode-border bg-vscode-panel py-2 text-sm text-vscode-text hover:bg-vscode-border/30"
+            >
+              <span aria-hidden>📝</span> NOTES
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPrepMode(true)}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded border border-vscode-border bg-vscode-panel py-2 text-sm text-vscode-text hover:bg-vscode-border/30"
+            >
+              <span aria-hidden>🎯</span> PREP MODE
+            </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
             <p className="px-1 py-2 text-[10px] font-semibold uppercase tracking-wider text-vscode-muted">
@@ -345,6 +364,13 @@ export default function LearnPage({ user }) {
                 roadmapMeta={roadmapList}
                 topicName={topic.topic_name}
                 level={topic.level}
+                user={user}
+                topicId={topic_id}
+                onNotesChange={() => setNotesVersion((v) => v + 1)}
+                onOpenNotes={() => {
+                  setShowNotesPanel(true);
+                  setNotesVersion((v) => v + 1);
+                }}
                 hasPrev={activeTab.index > 0}
                 hasNext={activeTab.index < sortedChapters.length - 1}
                 onPrev={() => {
@@ -385,10 +411,35 @@ export default function LearnPage({ user }) {
           </div>
         </section>
 
+        {/* Notes Panel */}
+        {showNotesPanel && (
+          <NotesPanel
+            user={user}
+            topicId={topic_id}
+            isOpen={showNotesPanel}
+            reload={notesVersion}
+            onClose={() => setShowNotesPanel(false)}
+          />
+        )}
+
         <div className="w-[300px] shrink-0">
           <ChatBot topicName={topic.topic_name} context={chatContext} />
         </div>
       </div>
+
+      {/* Prep Mode Modal */}
+      {showPrepMode && (
+        <PrepMode
+          topicId={topic_id}
+          topicName={topic.topic_name}
+          onStartExam={(exam) => {
+            setShowPrepMode(false);
+            if (exam) {
+              // TODO: Navigate to exam
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

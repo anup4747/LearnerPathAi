@@ -18,6 +18,10 @@ quizzes_col = _db["quizzes"]
 exams_col = _db["exams"]
 results_col = _db["results"]
 feedback_col = _db["feedback"]
+notes_col = _db["notes"]
+flashcards_col = _db["flashcards"]
+analytics_col = _db["analytics"]
+achievements_col = _db["achievements"]
 
 
 def _oid(topic_id):
@@ -239,3 +243,82 @@ def get_all_feedback():
     for fb in feedback_list:
         fb["_id"] = str(fb["_id"])
     return feedback_list
+
+
+def save_note(user_id, topic_id, chapter_number, selected_text, note_text, highlight_color):
+    doc = {
+        "user_id": user_id,
+        "topic_id": topic_id,
+        "chapter_number": chapter_number,
+        "selected_text": selected_text,
+        "note_text": note_text,
+        "highlight_color": highlight_color,
+        "created_at": datetime.utcnow(),
+    }
+    r = notes_col.insert_one(doc)
+    return str(r.inserted_id)
+
+
+def get_user_notes(user_id, topic_id):
+    cur = notes_col.find({"user_id": user_id, "topic_id": topic_id}).sort("created_at", -1)
+    notes = list(cur)
+    for n in notes:
+        n["_id"] = str(n["_id"])
+    return notes
+
+
+def update_note(note_id, note_text):
+    oid = _oid(note_id)
+    if not oid:
+        return False
+    notes_col.update_one(
+        {"_id": oid},
+        {"$set": {"note_text": note_text, "updated_at": datetime.utcnow()}}
+    )
+    return True
+
+
+def delete_note(note_id):
+    oid = _oid(note_id)
+    if not oid:
+        return False
+    notes_col.delete_one({"_id": oid})
+    return True
+
+
+def save_flashcards(user_id, topic_id, chapter_number, flashcards):
+    doc = {
+        "user_id": user_id,
+        "topic_id": topic_id,
+        "chapter_number": chapter_number,
+        "flashcards": flashcards,
+        "created_at": datetime.utcnow(),
+    }
+    r = flashcards_col.insert_one(doc)
+    return str(r.inserted_id)
+
+
+def get_flashcards(user_id, topic_id):
+    cur = flashcards_col.find({"user_id": user_id, "topic_id": topic_id}).sort("chapter_number", 1)
+    cards = list(cur)
+    for c in cards:
+        c["_id"] = str(c["_id"])
+    return cards
+
+
+def update_study_time(user_id, topic_id, time_spent):
+    analytics_col.update_one(
+        {"user_id": user_id, "topic_id": topic_id},
+        {"$inc": {"total_time": time_spent}, "$set": {"last_updated": datetime.utcnow()}},
+        upsert=True
+    )
+
+
+def unlock_achievement(user_id, achievement_type):
+    doc = {
+        "user_id": user_id,
+        "achievement_type": achievement_type,
+        "unlocked_at": datetime.utcnow(),
+    }
+    r = achievements_col.insert_one(doc)
+    return str(r.inserted_id)

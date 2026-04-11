@@ -1,4 +1,5 @@
 import BlogContent from "./BlogContent";
+import TextSelector from "./TextSelector";
 
 function badgeDifficulty(d) {
   if (d === "Beginner") return "bg-emerald-500/20 text-emerald-300";
@@ -16,6 +17,10 @@ export default function BlogView({
   onNext,
   hasPrev,
   hasNext,
+  user,
+  topicId,
+  onNotesChange,
+  onOpenNotes,
 }) {
   const num = chapter?.chapter_number;
   const meta =
@@ -39,7 +44,15 @@ export default function BlogView({
           {meta.difficulty || level}
         </span>
       </div>
-      <BlogContent content={chapter?.content} />
+      <TextSelector
+        user={user}
+        topicId={topicId}
+        chapterNumber={num}
+        onNotesChange={onNotesChange}
+        onOpenNotes={onOpenNotes}
+      >
+        <BlogContent content={chapter?.content} />
+      </TextSelector>
       <div className="mt-12 flex flex-wrap gap-4 border-t border-gray-700 pt-8">
         <button
           type="button"

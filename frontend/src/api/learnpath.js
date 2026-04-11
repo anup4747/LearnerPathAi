@@ -67,12 +67,7 @@ export async function getResults(topic_id) {
   return data;
 }
 
-export async function sendChat(
-  topic,
-  context,
-  conversation_history,
-  message,
-) {
+export async function sendChat(topic, context, conversation_history, message) {
   const { data } = await api.post("/chat", {
     topic,
     context,
@@ -88,5 +83,61 @@ export async function completeTopic(topic_id, total_score, max_score) {
     total_score,
     max_score,
   });
+  return data;
+}
+
+export async function createNote(
+  user_id,
+  topic_id,
+  chapter_number,
+  selected_text,
+  note_text,
+  highlight_color,
+) {
+  const { data } = await api.post("/notes/create", {
+    user_id,
+    topic_id,
+    chapter_number,
+    selected_text,
+    note_text,
+    highlight_color,
+  });
+  return data;
+}
+
+export async function getUserNotes(user_id, topic_id) {
+  const { data } = await api.get(`/notes/${user_id}/${topic_id}`);
+  return data;
+}
+
+export async function updateNote(note_id, note_text) {
+  const { data } = await api.put(`/notes/update/${note_id}`, {
+    note_text,
+  });
+  return data;
+}
+
+export async function deleteNote(note_id) {
+  const { data } = await api.delete(`/notes/delete/${note_id}`);
+  return data;
+}
+
+export async function createFlashcards(
+  user_id,
+  topic_id,
+  chapter_number,
+  flashcards,
+) {
+  const { data } = await api.post("/flashcards/create", {
+    user_id,
+    topic_id,
+    chapter_number,
+    flashcards,
+  });
+  return data;
+}
+
+export async function getFlashcards(user_id, topic_id) {
+  const { data } = await api.get(`/flashcards/${user_id}/${topic_id}`);
   return data;
 }

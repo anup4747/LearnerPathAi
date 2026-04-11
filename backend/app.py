@@ -274,6 +274,98 @@ def api_feedback():
     return jsonify({"success": True, "feedback_id": feedback_id}), 201
 
 
+@app.route("/api/notes/create", methods=["POST"])
+def api_create_note():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    topic_id = data.get("topic_id")
+    chapter_number = data.get("chapter_number")
+    selected_text = data.get("selected_text")
+    note_text = data.get("note_text")
+    highlight_color = data.get("highlight_color", "yellow")
+
+    if not all([user_id, topic_id, chapter_number, selected_text, note_text]):
+        return jsonify({"error": "user_id, topic_id, chapter_number, selected_text, and note_text are required"}), 400
+
+    try:
+        note_id = db.save_note(user_id, topic_id, chapter_number, selected_text, note_text, highlight_color)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify({"success": True, "note_id": note_id}), 201
+
+
+@app.route("/api/notes/<user_id>/<topic_id>", methods=["GET"])
+def api_get_user_notes(user_id, topic_id):
+    try:
+        notes = db.get_user_notes(user_id, topic_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify(notes), 200
+
+
+@app.route("/api/notes/update/<note_id>", methods=["PUT"])
+def api_update_note(note_id):
+    data = request.get_json() or {}
+    note_text = data.get("note_text")
+
+    if not note_text:
+        return jsonify({"error": "note_text is required"}), 400
+
+    try:
+        ok = db.update_note(note_id, note_text)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    if not ok:
+        return jsonify({"error": "Note not found"}), 404
+
+    return jsonify({"success": True}), 200
+
+
+@app.route("/api/notes/delete/<note_id>", methods=["DELETE"])
+def api_delete_note(note_id):
+    try:
+        ok = db.delete_note(note_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    if not ok:
+        return jsonify({"error": "Note not found"}), 404
+
+    return jsonify({"success": True}), 200
+
+
+@app.route("/api/flashcards/create", methods=["POST"])
+def api_create_flashcards():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    topic_id = data.get("topic_id")
+    chapter_number = data.get("chapter_number")
+    flashcards = data.get("flashcards")
+
+    if not all([user_id, topic_id, chapter_number, flashcards]):
+        return jsonify({"error": "user_id, topic_id, chapter_number, and flashcards are required"}), 400
+
+    try:
+        flashcards_id = db.save_flashcards(user_id, topic_id, chapter_number, flashcards)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify({"success": True, "flashcards_id": flashcards_id}), 201
+
+
+@app.route("/api/flashcards/<user_id>/<topic_id>", methods=["GET"])
+def api_get_flashcards(user_id, topic_id):
+    try:
+        cards = db.get_flashcards(user_id, topic_id)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify(cards), 200
+
+
 if __name__ == "__main__":
     socketio.run(
         app,
