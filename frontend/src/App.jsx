@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import LoadingScreen from "./components/LoadingScreen";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import LearnPage from "./pages/LearnPage";
 import Login from "./pages/Login";
 import NewTopic from "./pages/NewTopic";
@@ -18,7 +19,7 @@ function ProtectedRoute({ user, authLoading, children }) {
     );
   }
   if (!user) {
-    return <Navigate to="/" replace state={{ from: location }} />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
   return children;
 }
@@ -62,8 +63,9 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route
-        path="/"
+        path="/login"
         element={
           <GuestOnlyRoute user={user} authLoading={authLoading}>
             <Login />

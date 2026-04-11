@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { createTopic } from "../api/learnpath";
 
 const LEVELS = [
-  { id: "Beginner", label: "Beginner", active: "bg-emerald-600/30 border-emerald-500 text-emerald-300" },
-  { id: "Intermediate", label: "Intermediate", active: "bg-amber-600/30 border-amber-500 text-amber-200" },
-  { id: "Advanced", label: "Advanced", active: "bg-red-600/30 border-red-500 text-red-300" },
+  { id: "Beginner", label: "Beginner" },
+  { id: "Intermediate", label: "Intermediate" },
+  { id: "Advanced", label: "Advanced" },
 ];
 
 export default function NewTopic({ user }) {
@@ -36,48 +36,60 @@ export default function NewTopic({ user }) {
   const canSubmit = topicText.trim().length > 0 && level && !loading;
 
   return (
-    <div className="min-h-screen bg-vscode-bg px-4 py-10">
-      <div className="mx-auto max-w-[600px] rounded-lg border border-vscode-border bg-vscode-sidebar p-8">
-        <h1 className="mb-6 text-center text-xl font-semibold text-vscode-text">
-          What do you want to learn today?
-        </h1>
-        <textarea
-          value={topicText}
-          onChange={(e) => setTopicText(e.target.value)}
-          rows={6}
-          placeholder="e.g. Python for beginners, Machine Learning, React hooks, Data Structures..."
-          className="mb-6 w-full resize-y rounded border border-vscode-border bg-vscode-bg p-4 text-vscode-text placeholder:text-vscode-muted outline-none focus:border-vscode-accent"
-        />
-        <p className="mb-2 text-xs uppercase tracking-wide text-vscode-muted">
-          Level
-        </p>
-        <div className="mb-6 flex flex-wrap gap-2">
-          {LEVELS.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => setLevel(l.id)}
-              className={`rounded border px-4 py-2 text-sm font-medium transition ${
-                level === l.id
-                  ? l.active
-                  : "border-vscode-border bg-vscode-panel text-vscode-muted hover:border-vscode-accent/50"
-              }`}
-            >
-              {l.label}
-            </button>
-          ))}
+    <div className="min-h-screen bg-vscode-bg px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl rounded-[2rem] bg-slate-950/95 p-10 ring-1 ring-slate-800 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+        <div className="mb-8 space-y-3">
+          <p className="text-xs uppercase tracking-[0.28em] text-vscode-muted">
+            New topic
+          </p>
+          <h1 className="text-3xl font-semibold text-white">
+            Create a tailored learning path.
+          </h1>
+          <p className="max-w-2xl text-sm leading-7 text-slate-400">
+            Enter what you want to learn and choose a level. The AI will build a
+            clean roadmap, chapter content, and quizzes.
+          </p>
         </div>
-        {error ? (
-          <p className="mb-4 text-sm text-vscode-error">{error}</p>
-        ) : null}
-        <button
-          type="button"
-          disabled={!canSubmit}
-          onClick={handleGenerate}
-          className="w-full rounded bg-gradient-to-r from-violet-600 to-purple-600 py-3 font-medium text-white transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {loading ? "Generating…" : "Generate Learning Path"}
-        </button>
+        <div className="space-y-6">
+          <label className="block text-sm font-medium text-white">
+            Learning topic
+          </label>
+          <textarea
+            value={topicText}
+            onChange={(e) => setTopicText(e.target.value)}
+            rows={5}
+            placeholder="e.g. React hooks, Python for data science, product design fundamentals"
+            className="w-full rounded-[1.5rem] border border-slate-700 bg-slate-900 px-5 py-4 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
+          />
+          <div>
+            <p className="mb-3 text-sm font-medium text-white">Difficulty</p>
+            <div className="flex flex-wrap gap-3">
+              {LEVELS.map((l) => (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() => setLevel(l.id)}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                    level === l.id
+                      ? "border-vscode-accent bg-vscode-accent/10 text-vscode-accent"
+                      : "border-slate-700 bg-slate-900 text-slate-100 hover:border-slate-500"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {error ? <p className="text-sm text-vscode-error">{error}</p> : null}
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={handleGenerate}
+            className="inline-flex w-full items-center justify-center rounded-full bg-vscode-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-vscode-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Generating…" : "Generate learning path"}
+          </button>
+        </div>
       </div>
     </div>
   );

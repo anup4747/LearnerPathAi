@@ -29,7 +29,8 @@ export default function QuizView({
     [questions, answers],
   );
 
-  const canSubmit = !saving && isLastQuestion && Boolean(answers[String(current)]);
+  const canSubmit =
+    !saving && isLastQuestion && Boolean(answers[String(current)]);
 
   function selectOption(letter) {
     if (submitted) return;
@@ -114,15 +115,15 @@ export default function QuizView({
                     <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-800 font-mono font-semibold text-slate-300">
                       {L}
                     </span>
-                    <span className="max-w-[calc(100%-4rem)] truncate">{text}</span>
+                    <span className="max-w-[calc(100%-4rem)] truncate">
+                      {text}
+                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
-          {error ? (
-            <p className="mb-2 text-sm text-rose-400">{error}</p>
-          ) : null}
+          {error ? <p className="mb-2 text-sm text-rose-400">{error}</p> : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -176,7 +177,10 @@ export default function QuizView({
                     {qq.question}
                   </p>
                   <p className="text-sm text-slate-400">
-                    Your answer: <strong className="text-white">{u || "—"}</strong> — Correct: <strong className="text-white">{qq.correct_answer}</strong>
+                    Your answer:{" "}
+                    <strong className="text-white">{u || "—"}</strong> —
+                    Correct:{" "}
+                    <strong className="text-white">{qq.correct_answer}</strong>
                   </p>
                   <p className="mt-3 text-sm leading-6 text-slate-400">
                     {qq.explanation}
@@ -193,13 +197,15 @@ export default function QuizView({
               <p className="text-3xl font-semibold text-white">
                 {score}/{total}
               </p>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] ${
-                score / total >= 0.75
-                  ? "bg-emerald-500/10 text-emerald-300"
-                  : score / total >= 0.5
-                    ? "bg-amber-500/10 text-amber-300"
-                    : "bg-rose-500/10 text-rose-300"
-              }`}>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] ${
+                  score / total >= 0.75
+                    ? "bg-emerald-500/10 text-emerald-300"
+                    : score / total >= 0.5
+                      ? "bg-amber-500/10 text-amber-300"
+                      : "bg-rose-500/10 text-rose-300"
+                }`}
+              >
                 {Math.round((score / total) * 100)}%
               </span>
             </div>

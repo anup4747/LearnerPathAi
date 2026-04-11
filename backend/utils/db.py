@@ -17,6 +17,7 @@ chapters_col = _db["chapters"]
 quizzes_col = _db["quizzes"]
 exams_col = _db["exams"]
 results_col = _db["results"]
+feedback_col = _db["feedback"]
 
 
 def _oid(topic_id):
@@ -217,3 +218,24 @@ def get_results(topic_id):
         "percentage": percentage,
         "all_completed": all_done,
     }
+
+
+def save_feedback(user_id, name, email, rating, feedback_type, message):
+    doc = {
+        "user_id": user_id,
+        "name": name,
+        "email": email,
+        "rating": int(rating),
+        "feedback_type": feedback_type,
+        "message": message,
+        "created_at": datetime.utcnow(),
+    }
+    r = feedback_col.insert_one(doc)
+    return str(r.inserted_id)
+
+
+def get_all_feedback():
+    feedback_list = list(feedback_col.find().sort("created_at", -1))
+    for fb in feedback_list:
+        fb["_id"] = str(fb["_id"])
+    return feedback_list

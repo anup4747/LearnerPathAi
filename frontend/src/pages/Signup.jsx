@@ -31,30 +31,33 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0f0f1a] px-4">
-      <div className="w-full max-w-md rounded-lg border border-vscode-border bg-vscode-sidebar/80 p-8 shadow-[0_0_40px_rgba(124,58,237,0.12)]">
+    <div className="flex min-h-screen items-center justify-center bg-vscode-bg px-4 py-10">
+      <div className="w-full max-w-md rounded-[2rem] bg-slate-950/95 p-10 shadow-[0_24px_80px_rgba(0,0,0,0.35)] ring-1 ring-slate-800">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-vscode-text">LearnPath AI</h1>
-          <p className="mt-1 text-sm text-vscode-muted">
-            Create your learning account
+          <p className="text-sm uppercase tracking-[0.28em] text-vscode-muted">
+            Create your account
+          </p>
+          <h1 className="mt-4 text-3xl font-semibold text-white">
+            Start building your course
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-400">
+            Signup and begin learning with personalized AI content.
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm text-vscode-muted">
-              Name
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded border border-vscode-border bg-vscode-bg px-3 py-2 text-vscode-text outline-none focus:border-vscode-accent"
+              className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
               autoComplete="name"
             />
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-vscode-muted">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
               Email
             </label>
             <input
@@ -62,12 +65,12 @@ export default function Signup() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded border border-vscode-border bg-vscode-bg px-3 py-2 text-vscode-text outline-none focus:border-vscode-accent"
+              className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
               autoComplete="email"
             />
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-vscode-muted">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">
               Password
             </label>
             <input
@@ -76,27 +79,28 @@ export default function Signup() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded border border-vscode-border bg-vscode-bg px-3 py-2 text-vscode-text outline-none focus:border-vscode-accent"
+              className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-vscode-accent focus:ring-1 focus:ring-vscode-accent/20"
               autoComplete="new-password"
             />
           </div>
-          {error ? (
-            <p className="text-sm text-vscode-error">{error}</p>
-          ) : null}
+          {error ? <p className="text-sm text-vscode-error">{error}</p> : null}
           {successMsg ? (
             <p className="text-sm text-vscode-success">{successMsg}</p>
           ) : null}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-gradient-to-r from-violet-600 to-purple-600 py-2.5 font-medium text-white transition hover:from-violet-500 hover:to-purple-500 disabled:opacity-50"
+            className="w-full rounded-full bg-vscode-accent px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-vscode-accent/90 disabled:opacity-50"
           >
-            {loading ? "Creating…" : "Create Account"}
+            {loading ? "Creating…" : "Create account"}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-vscode-muted">
+        <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{" "}
-          <Link to="/" className="text-vscode-accent hover:underline">
+          <Link
+            to="/login"
+            className="font-semibold text-vscode-accent hover:underline"
+          >
             Login
           </Link>
         </p>

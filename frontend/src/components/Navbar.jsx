@@ -1,19 +1,27 @@
-export default function Navbar({ userEmail, onLogout }) {
+export default function Navbar({ userEmail, onLogout, onFeedback }) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-vscode-border bg-vscode-sidebar px-4">
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold text-vscode-text">
-          LearnPath AI
-        </span>
+    <header className="flex h-14 shrink-0 items-center justify-between bg-slate-950/95 px-6 ring-1 ring-slate-800">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-lg text-white">
+          🧠
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-white">EduGen AI</p>
+          <p className="text-xs text-slate-400">{userEmail}</p>
+        </div>
       </div>
       <div className="flex items-center gap-3">
-        <span className="max-w-[200px] truncate text-sm text-vscode-muted">
-          {userEmail}
-        </span>
+        <button
+          type="button"
+          onClick={onFeedback}
+          className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-800"
+        >
+          Feedback
+        </button>
         <button
           type="button"
           onClick={onLogout}
-          className="rounded border border-vscode-border bg-vscode-panel px-3 py-1 text-sm text-vscode-text hover:bg-vscode-border/40"
+          className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-800"
         >
           Logout
         </button>

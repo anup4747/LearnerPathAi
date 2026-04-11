@@ -2,85 +2,107 @@ import { Link } from "react-router-dom";
 
 const features = [
   {
-    title: "Personalized Roadmap",
-    icon: "🗺️",
-    description:
-      "Get a tailored chapter plan keyed to your goals and experience.",
+    title: "Personalized roadmap",
+    subtitle: "AI builds a clear plan tailored to your goals.",
+    tags: ["Smart", "Structured", "Tailored"],
   },
   {
-    title: "Blog-style Chapters",
-    icon: "📚",
-    description:
-      "Read polished lessons with examples, analogies and clear takeaways.",
+    title: "Minimal lessons",
+    subtitle: "Readable chapters with sharp hierarchy and clean spacing.",
+    tags: ["Markdown", "Examples", "Clarity"],
   },
   {
-    title: "Quizzes and Exams",
-    icon: "✏️",
-    description:
-      "Stay sharp with chapter quizzes and course-level assessments.",
+    title: "Quiz insights",
+    subtitle: "Performance tracking without clutter or distraction.",
+    tags: ["Progress", "Feedback", "Results"],
   },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-hero-gradient text-white">
-      <section className="mx-auto flex min-h-screen max-w-7xl flex-col justify-between px-6 py-10 sm:px-8 lg:px-10">
-        <div className="grid gap-12 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="flex flex-col justify-center gap-8">
-            <div className="max-w-2xl space-y-4">
-              <span className="inline-flex rounded-full bg-indigo-500/15 px-4 py-2 text-sm uppercase tracking-[0.3em] text-indigo-200">
-                Empower your learning journey
-              </span>
-              <h1 className="text-5xl font-semibold tracking-tight text-white sm:text-6xl">
-                Master Any Topic with AI
-              </h1>
-              <p className="max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-                Get a personalized roadmap, chapter-by-chapter blog lessons,
-                quizzes and exams — all generated just for you.
+    <main className="min-h-screen bg-vscode-bg text-vscode-text">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-10 sm:px-6 lg:px-8">
+        <header className="mb-10 rounded-[2rem] bg-slate-950/95 p-10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] ring-1 ring-slate-800">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-4 text-xs uppercase tracking-[0.28em] text-vscode-muted">
+                Notion-style AI learning platform
               </p>
+              <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
+                Learn smarter with clean AI-powered courses.
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-slate-400">
+                Build a personalized roadmap, read structured lessons, and take
+                quizzes that keep you focused. The full site stays dark, calm,
+                and premium.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                to="/learn"
-                className="inline-flex w-full items-center justify-center rounded-3xl bg-gradient-to-r from-indigo-500 to-violet-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-indigo-500/20 transition hover:brightness-110 sm:w-auto"
+                to="/login"
+                className="inline-flex items-center justify-center rounded-full bg-vscode-accent px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-vscode-accent/30 transition hover:bg-vscode-accent/90"
               >
-                Start Learning
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-100 shadow-sm transition hover:bg-slate-800"
+              >
+                Signup
               </Link>
             </div>
           </div>
-          <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-soft backdrop-blur-xl">
-            <div className="mb-6 rounded-3xl bg-slate-900/80 p-6 text-slate-100">
-              <p className="text-sm uppercase tracking-[0.24em] text-indigo-300">
-                AI learning experience
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold">
-                Your next lesson starts here
+        </header>
+
+        <section className="grid gap-6 md:grid-cols-2">
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              className="rounded-[2rem] bg-slate-950/95 p-8 shadow-[0_18px_50px_rgba(0,0,0,0.3)] ring-1 ring-slate-800"
+            >
+              <div className="mb-4 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
+                {feature.tags.join(" • ")}
+              </div>
+              <h2 className="text-2xl font-semibold text-white">
+                {feature.title}
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-400">
-                Interactive coaching, structured chapters, and smart assessments
-                make every topic feel clear, focused, and motivating.
+                {feature.subtitle}
+              </p>
+            </article>
+          ))}
+        </section>
+
+        <section className="mt-10 rounded-[2rem] bg-slate-950/95 p-10 shadow-[0_30px_80px_rgba(0,0,0,0.35)] ring-1 ring-slate-800">
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div>
+              <h3 className="text-lg font-semibold text-white">
+                Why this feels premium
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-400">
+                Minimal spacing, strong typography, and soft contrast make every
+                page feel like a calm workspace.
               </p>
             </div>
-            <div className="grid gap-4">
-              {features.map((feature) => (
-                <article
-                  key={feature.title}
-                  className="rounded-3xl border border-slate-800/90 bg-slate-900/80 p-5 transition hover:border-indigo-500/50"
-                >
-                  <div className="mb-3 text-3xl">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold text-white">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-400">
-                    {feature.description}
-                  </p>
-                </article>
-              ))}
+            <div>
+              <h3 className="text-lg font-semibold text-white">
+                Focused workflow
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-400">
+                Chapters, quizzes, and progress are presented in simple cards so
+                the product feels intuitive and elegant.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Fast start</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-400">
+                Go from signup to topic creation in a few clicks, with all pages
+                remaining consistent and easy to scan.
+              </p>
             </div>
           </div>
-        </div>
-        <footer className="mt-16 border-t border-slate-800/80 pt-6 text-sm text-slate-500">
-          LearnPath AI — Personalized learning for every skill level.
-        </footer>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

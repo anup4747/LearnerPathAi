@@ -182,7 +182,7 @@ export default function LearnPage({ user }) {
           onClick={() => navigate("/dashboard")}
           className="text-sm font-medium text-vscode-accent hover:underline"
         >
-          ← LearnPath AI
+          ← EduGen AI
         </button>
         <div className="flex items-center gap-3">
           <span className="max-w-[160px] truncate text-xs text-vscode-muted">

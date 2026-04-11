@@ -18,7 +18,7 @@ export default function LoadingScreen() {
 
   useEffect(() => {
     const timers = STEPS.map((_, i) =>
-      setTimeout(() => setVisibleSteps((s) => Math.max(s, i + 1)), i * 3000),
+      setTimeout(() => setVisibleSteps((s) => Math.max(s, i + 1)), i * 2500),
     );
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -48,82 +48,78 @@ export default function LoadingScreen() {
   }, [topic_id, navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-vscode-bg px-6">
-      <div
-        className="mb-8 flex h-20 w-20 items-center justify-center rounded-full border-2 border-vscode-accent/40 text-4xl shadow-[0_0_30px_rgba(124,58,237,0.35)]"
-        style={{ animation: "pulse-glow 2s ease-in-out infinite" }}
-      >
-        ✨
+    <div className="flex min-h-screen flex-col items-center justify-center bg-vscode-bg px-6 py-12">
+      <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-slate-900 text-white shadow-[0_24px_80px_rgba(0,0,0,0.35)] ring-1 ring-slate-800">
+        <span className="text-4xl">✨</span>
       </div>
-      <style>{`
-        @keyframes pulse-glow {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.85; }
-        }
-        @keyframes bounce-dots {
-          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-          40% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-      <h1 className="mb-8 text-center text-xl font-semibold text-vscode-text">
-        Building Your Learning Path…
+      <h1 className="mb-8 text-center text-2xl font-semibold text-white">
+        Building your learning path…
       </h1>
-      {failed ? (
-        <div className="mb-8 max-w-md text-center">
-          <p className="mb-4 text-vscode-error">
-            Something went wrong while generating your course. Check your API
-            keys and MongoDB, then try creating a topic again.
-          </p>
-          <Link
-            to="/dashboard"
-            className="text-vscode-accent hover:underline"
-          >
-            Back to Dashboard
-          </Link>
-        </div>
-      ) : (
-        <ul className="mb-8 w-full max-w-md space-y-3">
-          {STEPS.map((label, i) => {
-            const show = i < visibleSteps;
-            const done = i < visibleSteps - 1 || visibleSteps > i + 1;
-            return (
-              <li
-                key={label}
-                className={`flex items-center gap-3 rounded border border-vscode-border bg-vscode-sidebar px-4 py-2 text-sm transition ${
-                  show ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <span
-                  className={
+      <div className="w-full max-w-xl rounded-[2rem] bg-slate-950/95 p-8 ring-1 ring-slate-800 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        {failed ? (
+          <div className="space-y-4 text-center">
+            <p className="text-sm leading-7 text-slate-400">
+              Something went wrong while generating your course. Refresh and try
+              again, or head back to your dashboard.
+            </p>
+            <Link
+              to="/dashboard"
+              className="inline-flex rounded-full bg-vscode-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-vscode-accent/90"
+            >
+              Back to dashboard
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {STEPS.map((label, i) => {
+              const active = i < visibleSteps;
+              const done = i < visibleSteps - 1 || visibleSteps > i + 1;
+              return (
+                <div
+                  key={label}
+                  className={`flex items-center justify-between rounded-[1.5rem] px-4 py-4 transition ${
                     done
-                      ? "text-vscode-success"
-                      : show
-                        ? "text-vscode-accent"
-                        : "text-vscode-muted"
-                  }
+                      ? "bg-slate-900/80"
+                      : active
+                        ? "bg-slate-800/80"
+                        : "bg-slate-950/70"
+                  }`}
                 >
-                  {done ? "✓" : "○"}
-                </span>
-                <span className="text-vscode-text">{label}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div className="mb-4 flex gap-1">
-        {[0, 1, 2].map((d) => (
-          <span
-            key={d}
-            className="h-2 w-2 rounded-full bg-vscode-accent"
-            style={{
-              animation: `bounce-dots 1.2s ease-in-out ${d * 0.15}s infinite`,
-            }}
-          />
-        ))}
+                  <div>
+                    <p className="text-sm font-semibold text-white">{label}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {done ? "Completed" : active ? "In progress" : "Waiting"}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      done
+                        ? "bg-emerald-500/10 text-emerald-300"
+                        : active
+                          ? "bg-vscode-accent/10 text-vscode-accent"
+                          : "bg-slate-700 text-slate-400"
+                    }`}
+                  >
+                    {done ? "Done" : active ? "Active" : "Pending"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-      <p className="text-xs text-vscode-muted">
-        This may take 1–2 minutes
-      </p>
+      <div className="mt-10 flex gap-2 text-xs text-slate-500">
+        <span className={visibleSteps > 0 ? "text-white" : "text-slate-500"}>
+          •
+        </span>
+        <span className={visibleSteps > 1 ? "text-white" : "text-slate-500"}>
+          •
+        </span>
+        <span className={visibleSteps > 2 ? "text-white" : "text-slate-500"}>
+          •
+        </span>
+      </div>
+      <p className="mt-3 text-sm text-slate-400">This may take 1–2 minutes.</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 # LearnPath AI
-
+`
 Full-stack personalized learning platform with a VS Code–inspired UI: React (Vite) + Tailwind frontend, Flask + MongoDB + Google Gemini backend, and Supabase email/password auth.
 
 ## Prerequisites
@@ -43,7 +43,8 @@ learnpath-ai/   (this folder: v2-gemini-react)
         │   ├── QuizView.jsx
         │   ├── ExamView.jsx
         │   ├── ResultView.jsx
-        │   └── ChatBot.jsx
+        │   ├── ChatBot.jsx
+        │   └── FeedbackForm.jsx
         └── pages/
             ├── Login.jsx
             ├── Signup.jsx
@@ -51,6 +52,16 @@ learnpath-ai/   (this folder: v2-gemini-react)
             ├── NewTopic.jsx
             └── LearnPage.jsx
 ```
+
+## Features
+
+- **Personalized Learning Paths**: AI-generated roadmaps, chapters, quizzes, and exams
+- **Interactive Learning**: Step-by-step content with progress tracking
+- **Real-time Chat**: AI-powered assistance during learning sessions
+- **Comprehensive Assessments**: Quizzes and exams with scoring
+- **User Feedback System**: Collect and store user feedback in MongoDB
+- **VS Code-inspired UI**: Modern, dark theme interface
+- **Supabase Authentication**: Secure email/password authentication
 
 ## Backend
 

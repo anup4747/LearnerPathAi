@@ -253,6 +253,27 @@ def api_topic_complete():
     return jsonify({"success": True}), 200
 
 
+@app.route("/api/feedback", methods=["POST"])
+def api_feedback():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    name = data.get("name")
+    email = data.get("email")
+    rating = data.get("rating")
+    feedback_type = data.get("feedback_type")
+    message = data.get("message")
+
+    if not all([name, email, rating, feedback_type, message]):
+        return jsonify({"error": "name, email, rating, feedback_type, and message are required"}), 400
+
+    try:
+        feedback_id = db.save_feedback(user_id, name, email, rating, feedback_type, message)
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify({"success": True, "feedback_id": feedback_id}), 201
+
+
 if __name__ == "__main__":
     socketio.run(
         app,
