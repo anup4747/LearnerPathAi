@@ -10,8 +10,8 @@ load_dotenv()
 
 # gemini-1.5-flash is no longer available on the current Gemini API; use a
 # supported Flash model. Override with GEMINI_MODEL in .env if needed.
-# MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
+# MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
 # MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 
