@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { getUserAnalytics, getUserTopics, getProfile, updateProfile } from "../api/learnpath";
+import {
+  getUserAnalytics,
+  getUserTopics,
+  getProfile,
+  updateProfile,
+} from "../api/learnpath";
 
 function levelBadgeClass(level) {
   if (level === "Beginner") return "bg-emerald-500/10 text-emerald-300";

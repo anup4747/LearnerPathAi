@@ -37,7 +37,7 @@ export default function ChatBot({ topicName, context }) {
     const url = getSocketUrl();
     const socket = io(url, {
       path: "/socket.io",
-      transports: ["websocket", "polling"],
+      transports: ["polling"],
       autoConnect: true,
     });
     socketRef.current = socket;
@@ -197,9 +197,7 @@ export default function ChatBot({ topicName, context }) {
             </div>
           </div>
         ))}
-        {error ? (
-          <p className="text-xs text-vscode-error">{error}</p>
-        ) : null}
+        {error ? <p className="text-xs text-vscode-error">{error}</p> : null}
         {!socketReady && !loading ? (
           <p className="text-xs text-vscode-muted">
             Connecting to chat server…

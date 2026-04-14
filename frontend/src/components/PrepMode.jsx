@@ -54,7 +54,9 @@ export default function PrepMode({ topicId, topicName, userId, onStartExam }) {
           disabled={generating || loading || !userId}
           className="mb-4 w-full rounded bg-vscode-success px-4 py-2 text-white hover:bg-vscode-success/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {generating ? "Generating exam…" : "Generate exam from quiz pain points"}
+          {generating
+            ? "Generating exam…"
+            : "Generate exam from quiz pain points"}
         </button>
         {message ? (
           <p className="mb-4 text-sm text-vscode-muted">{message}</p>
